@@ -12,7 +12,6 @@ const context = [
   "/tournament",
   "/history",
   "/participant",
-
 ];
 
 module.exports = function(app) {
