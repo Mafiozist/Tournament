@@ -1,10 +1,14 @@
 ﻿import React, { Component, useState} from 'react';
-import {useWindowSize}  from '@react-hooks-library/core'
 import { SingleEliminationBracket, DoubleEliminationBracket, Match, SVGViewer, MATCH_STATES } from '@g-loot/react-tournament-brackets';
+import { useDispatch, useSelector } from 'react-redux';
+import { actions } from '../redux/component/one/testSlice';
+import { useActions } from '../redux/hooks/useActions';
+import { useTest } from '../redux/hooks/useTest';
+import { TextField } from '@mui/material';
 var ReactDOM = require('react-dom');
 
 
-function SingleEliminationFunc(){
+function SingleEliminationFunc(props){
 
     //const [width, height] = useWindowSize(100, 100);
     const matches = [
@@ -19,7 +23,7 @@ function SingleEliminationFunc(){
         participants: [
           {
             id: 'c016cb2a-fdd9-4c40-a81f-0cc6bdf4b9cc',
-            resultText: null,
+            resultText: "SHIT",
             isWinner: false,
             status: null,
             name: 'giacomo123',
@@ -323,17 +327,30 @@ function SingleEliminationFunc(){
         ],
       },
     ];
-    
+    const { test } = useTest();
+    const { addToTest, getFromTest } = useActions();
+
+    //Dispatch отправляет action в хранилище и получает стейт
+
     return (
-        <SingleEliminationBracket
-            matches={matches}
-            matchComponent={Match}
-            // svgWrapper={({ children, ...props }) => (
-            //     <SVGViewer {...props}>
-            //         {children}
-            //     </SVGViewer>
-            // )}
-        />
+        
+        <div>
+            <button onClick={() => { addToTest({ test: 'shit', id: props.inc, name: 'Ivan' + props.inc}); props.incrementInc(); }}>Добавить</button>
+            <button onClick={() => { console.warn(test) }}>Посмотреть</button>
+            <TextField id="outlined-basic" label="Outlined" variant="outlined"  type='number'/>
+
+            <SingleEliminationBracket
+                matches={matches}
+                matchComponent={Match}
+                // svgWrapper={({ children, ...props }) => (
+                //     <SVGViewer {...props}>
+                //         {children}
+                //     </SVGViewer>
+                // )}
+            />
+
+            
+        </div>
     );
 
 };
@@ -342,10 +359,13 @@ export class SingleElimination extends Component {
 
     constructor(props) {
         super(props);
+        this.state= {
+            inc: 1,
+        }
     }
 
     render() {
-        return (<SingleEliminationFunc />);
+        return (<SingleEliminationFunc inc={this.state.inc} incrementInc={()=> this.setState({inc: ++this.state.inc})}/>);
     }
 }
 
