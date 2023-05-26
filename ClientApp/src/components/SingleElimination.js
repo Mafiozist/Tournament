@@ -1,10 +1,10 @@
-﻿import React, { Component, useState} from 'react';
+﻿import React, { Component, useState, useRef} from 'react';
 import { SingleEliminationBracket, DoubleEliminationBracket, Match, SVGViewer, MATCH_STATES } from '@g-loot/react-tournament-brackets';
 import { useDispatch, useSelector } from 'react-redux';
 import { actions } from '../redux/component/one/testSlice';
 import { useActions } from '../redux/hooks/useActions';
 import { useTest } from '../redux/hooks/useTest';
-import { TextField } from '@mui/material';
+import { Input, TextField } from '@mui/material';
 var ReactDOM = require('react-dom');
 
 
@@ -330,12 +330,19 @@ function SingleEliminationFunc(props){
     const { test } = useTest();
     const { addToTest, getFromTest } = useActions();
 
+    const ref=React.createRef(null);
+
+    function handleChange(event){
+      alert(event);
+    }
+
     //Dispatch отправляет action в хранилище и получает стейт
 
     return (
         
         <div>
-            <button onClick={() => { addToTest({ test: 'shit', id: props.inc, name: 'Ivan' + props.inc}); props.incrementInc(); }}>Добавить</button>
+            <Input id='asd' ref={ref} onChange={handleChange}></Input>
+            <button onClick={() => { addToTest({ test: 'shit', id: props.inc, name: 'Ivan' + props.inc}); props.incrementInc(); ref.current.onChange}}>Добавить</button>
             <button onClick={() => { console.warn(test) }}>Посмотреть</button>
             <TextField id="outlined-basic" label="Outlined" variant="outlined"  type='number'/>
 

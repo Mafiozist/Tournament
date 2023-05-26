@@ -12,6 +12,7 @@ export const testSlice = createSlice({//slice for every feature
     reducers: {
         addToTest: (state, { payload}) => {
             if(state.find(item => item.id == payload.id)) return;
+            console.log(state);
             state.push(payload);   
         },
     }

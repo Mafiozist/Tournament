@@ -2,6 +2,7 @@ import { Counter } from "./components/Counter";
 import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
 import { SingleElimination } from "./components/SingleElimination";
+import { Participants } from "./components/participants/Participants";
 
 const AppRoutes = [
     {
@@ -17,8 +18,13 @@ const AppRoutes = [
         element: <FetchData />
     },
     {
-        path: '/test',
+        path: '/Test',
         element: <SingleElimination />
+    }
+    ,
+    {
+        path: '/Participants',
+        element: <Participants />
     }
 ];
 
