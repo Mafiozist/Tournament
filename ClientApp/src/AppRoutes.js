@@ -10,20 +10,12 @@ const AppRoutes = [
         element: <Home />
     },
     {
-        path: '/counter',
-        element: <Counter />
-    },
-    {
-        path: '/fetch-data',
-        element: <FetchData />
-    },
-    {
-        path: '/Test',
+        path: '/test',
         element: <SingleElimination />
     }
     ,
     {
-        path: '/Participants',
+        path: '/participants',
         element: <Participants />
     }
 ];
