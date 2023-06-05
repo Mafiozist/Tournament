@@ -8,13 +8,14 @@ import PersonPinIcon from '@mui/icons-material/PersonPin';
 import BugReportSharpIcon from '@mui/icons-material/BugReportSharp';
 import Diversity3SharpIcon from '@mui/icons-material/Diversity3Sharp';
 import EmojiEventsSharpIcon from '@mui/icons-material/EmojiEventsSharp';
+import HomeSharpIcon from '@mui/icons-material/HomeSharp';
+import AppRoutes from '../AppRoutes.js';
 
 export class NavMenu extends Component {
     static displayName = NavMenu.name;
 
     constructor(props) {
         super(props);
-
         this.toggleNavbar = this.toggleNavbar.bind(this);
         this.state = {
             collapsed: true,
@@ -28,22 +29,34 @@ export class NavMenu extends Component {
         });
     }
 
+    componentDidMount(){
+        this.setCurrentTab();
+    }
+
+    setCurrentTab(){
+        const url = window.location.href;
+        AppRoutes.forEach(i => {
+            
+            if(url.includes(i.path)){
+                this.setState({tab: AppRoutes.indexOf(i)});
+            }
+
+        });
+
+    }
+
     render() {
         return (
             <header>
 
-                <Navbar className="navbar-expand-sm border-bottom box-shadow mb-2" container light>
-                    <NavbarBrand tag={Link} to="/">Tournament</NavbarBrand>
-                    <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
+                <Tabs value={this.state.tab} onChange={(event, val) => this.setState({ tab: val })} className="navbar-expand-sm border-bottom box-shadow mb-2" centered>
+                    <Tab component={Link} to={AppRoutes[0].path} icon={<HomeSharpIcon />} iconPosition='top' label="Главная" />
+                    <Tab component={Link} to={AppRoutes[1].path} icon={<BugReportSharpIcon />} iconPosition='top' label="Фичи" />
+                    <Tab component={Link} to={AppRoutes[2].path} icon={<PersonPinIcon />} iconPosition='top' label="Участники" />
+                    <Tab component={Link} icon={<Diversity3SharpIcon />} iconPosition='top' label="Команды" />
+                    <Tab component={Link} icon={<EmojiEventsSharpIcon />} iconPosition='top' label="Турниры" />
+                </Tabs>
 
-                    <Tabs value={this.state.tab} onChange={(event, val) => this.setState({ tab: val })}>
-                        <Tab component={Link} to="/Test" icon={<BugReportSharpIcon />} iconPosition='top' label="Фичи"/>
-                        <Tab component={Link} to="/Participants" icon={<PersonPinIcon />} iconPosition='top' label="Участники" />
-                        <Tab component={Link} icon={<Diversity3SharpIcon />} iconPosition='top' label="Команды" />
-                        <Tab component={Link} icon={<EmojiEventsSharpIcon />} iconPosition='top' label="Турниры" />
-                    </Tabs>
-
-                </Navbar>
             </header>
         );
     }

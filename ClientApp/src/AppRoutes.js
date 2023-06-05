@@ -1,21 +1,22 @@
 import { Counter } from "./components/Counter";
 import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
-import { SingleElimination } from "./components/SingleElimination";
+import { SingleElimination } from "./components/tests/SingleElimination";
 import { Participants } from "./components/participants/Participants";
 
 const AppRoutes = [
     {
         index: true,
+        path:'/',
         element: <Home />
     },
     {
-        path: '/test',
+        path: '/Test',
         element: <SingleElimination />
     }
     ,
     {
-        path: '/participants',
+        path: '/Participants',
         element: <Participants />
     }
 ];
