@@ -1,5 +1,5 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit'
-import { reducer as testReducer } from '../component/one/testSlice'
+import { reducer as testReducer } from '../component/tests/testSlice'
 import { reducer as participantsReducer } from '../component/participants/participantsSlice'
 
 const IsDevelopmentMode = true;
