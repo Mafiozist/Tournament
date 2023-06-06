@@ -53,7 +53,7 @@ export class NavMenu extends Component {
                     <Tab component={Link} to={AppRoutes[0].path} icon={<HomeSharpIcon />} iconPosition='top' label="Главная" />
                     <Tab component={Link} to={AppRoutes[1].path} icon={<BugReportSharpIcon />} iconPosition='top' label="Фичи" />
                     <Tab component={Link} to={AppRoutes[2].path} icon={<PersonPinIcon />} iconPosition='top' label="Участники" />
-                    <Tab component={Link} icon={<Diversity3SharpIcon />} iconPosition='top' label="Команды" />
+                    <Tab component={Link} to={AppRoutes[3].path} icon={<Diversity3SharpIcon />} iconPosition='top' label="Команды" />
                     <Tab component={Link} icon={<EmojiEventsSharpIcon />} iconPosition='top' label="Турниры" />
                 </Tabs>
 
