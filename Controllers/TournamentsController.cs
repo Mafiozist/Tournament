@@ -8,7 +8,7 @@ using Tournament.Models.DataModels;
 namespace Tournament.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]/api/")]
     public class TournamentsController : Controller
     {
 

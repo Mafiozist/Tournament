@@ -8,7 +8,7 @@ using System.Data;
 namespace Tournament.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]/api/")]
     public class TeamsController : Controller
     {
         private IConfiguration _configuration;
