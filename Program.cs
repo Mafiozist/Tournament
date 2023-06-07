@@ -7,6 +7,7 @@ builder.Services.AddMvc();
 builder.Services.AddSwaggerGenNewtonsoftSupport();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+//builder.Services.AddConnections();
 
 var app = builder.Build();
 

@@ -2,7 +2,7 @@
 
 namespace Tournament.Controllers
 {
-    public class TournamentController : Controller
+    public class ParticipantsController : Controller
     {
         public IActionResult Index()
         {

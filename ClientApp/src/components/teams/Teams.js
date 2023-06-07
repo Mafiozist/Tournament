@@ -3,13 +3,15 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
-import { CardActionArea, Fade, Grow, List, Stack } from '@mui/material';
+import LoadingButton from '@mui/lab/LoadingButton';
+import {  CardActionArea, Fade, Grow, List, Stack } from '@mui/material';
+import { useGetTeamsQuery, useCreateTeamMutation } from '../../redux/component/api/teams.api';
 
-function RenderCard({showContent}, {timeout}) {
+function RenderCard(props) {
 
     return (
 
-        <Grow in={showContent} timeout={timeout}>
+        <Grow in={props.showContent} timeout={props.timeout}>
             <Card sx={{ maxWidth: 345 }}>
                 <CardActionArea>
                     <CardMedia
@@ -39,11 +41,18 @@ function RenderCard({showContent}, {timeout}) {
 
 export function Teams(props) {
     const [showContent, setShowContent] = React.useState(false);
-    const timeout = 250;
+    const [loading, setLoading] = React.useState(false);
+    const timeout = 225;
 
+    const {data, isLoading, isError, isSuccess} = useGetTeamsQuery();
+    const [createTeam] = useCreateTeamMutation();
+
+    console.log(data, isError);
+    
     React.useEffect(() => {
         // Имитация задержки загрузки
         setTimeout(() => {
+            
             setShowContent(true);
         }, 125);
     }, []);
@@ -51,7 +60,17 @@ export function Teams(props) {
     //Должна быть функция которая будет отображать новый компонент на экране и в это функции будет задаваться анимация, осталось узнать как показать ее в начале
     return (
 
-        <Stack container spacing={3} direction="row" useFlexGap flexWrap="wrap" >
+        <Stack spacing={3} direction="row" useFlexGap flexWrap="wrap" >
+            <LoadingButton loading={loading} variant='outlined'
+                onClick={
+                    ()=> {
+
+                        setLoading(true); createTeam({name:'КомандаТест'}).then(res=>{
+                            setLoading(false);
+                        })
+                    }
+                }
+            />
             {showContent && (
                 <>
                     <RenderCard showContent={showContent} timeout={timeout}/>

@@ -4,6 +4,7 @@ import { Home } from "./components/Home";
 import { SingleElimination } from "./components/tests/SingleElimination";
 import { Participants } from "./components/participants/Participants";
 import { Teams } from "./components/teams/Teams";
+import { Tournaments } from "./components/tournaments/Tournaments.js";
 
 const AppRoutes = [
     {
@@ -12,16 +13,20 @@ const AppRoutes = [
         element: <Home />
     },
     {
-        path: '/Test',
+        path: '/test',
         element: <SingleElimination />
     },
     {
-        path: '/Participants',
+        path: '/Participant',
         element: <Participants />
     },
     {
-        path: '/Teams',
+        path: '/Team',
         element: <Teams />
+    },
+    {
+        path: '/Tournament',
+        element: <Tournaments />
     }
 ];
 
