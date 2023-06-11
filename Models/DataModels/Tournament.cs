@@ -2,19 +2,19 @@
 {
     public class Tournament
     {
-        public int Id_Tour { get; set; }
-        public int Id_Discipline { get; set; }
-        public int? Id_First_Winner { get; set; }
-        public int? Id_Second_Winner { get; set; }
-        public int? Id_Third_Winner { get; set; }
-        public int? Id_Final_Match { get; set; }
+        public int IdTour { get; set; }
+        public int IdDiscipline { get; set; }
+        public int? IdFirstWinner { get; set; }
+        public int? IdSecondWinner { get; set; }
+        public int? IdThirdWinner { get; set; }
+        public int? IdFinalMatch { get; set; }
         public string Name { get; set; }
-        public bool Is_Ended { get; set; }
+        public bool IsEnded { get; set; }
         public string? Prize { get; set; }
         public string? Place { get; set; }
-        public int Teams_Count { get; set; }
-        public int Members_Count { get; set; }
-        public int Matches_Count { get; set; }
+        public int TeamsCount { get; set; }
+        public int MembersCount { get; set; }
+        public int MatchesCount { get; set; }
         public Group Group { get; set; }
         public List<Match> TournamentMatches { get; set; }
     }

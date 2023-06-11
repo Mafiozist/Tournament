@@ -3,18 +3,19 @@ import { api } from "./api";
 export const teamsApi = api.injectEndpoints({
     endpoints: builder => ({
         createTeam: builder.mutation({
-            query: (name) => ({
-                body: name,
-                url: 'Teams/CreateTeam',
+            query: (team) => ({
+                body: {team},
+                url: 'Teams/api/CreateTeam',
                 method:'POST',
             }),
             invalidatesTags: ()=> [{
                 type:'teams',
                 //id
-            }]
+            }], 
+            onQueryStarted: (e,a) => {console.warn(e,a)}
         }),
         getTeams: builder.query({
-            query: () => 'Teams/GetTeams',
+            query: () => 'Teams/api/GetTeams',
             providesTags: () => [{
                 type: 'teams',
             }]

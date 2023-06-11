@@ -23,16 +23,21 @@ namespace Tournament.Controllers
         {
             using (IDbConnection db = new NpgsqlConnection(_configuration.GetConnectionString("competition")))
             {
-                return db.Query<Models.DataModels.Team>($@"SELECT * FROM public.team;").ToList();
+                return db.Query($@"SELECT * FROM public.team;").Select(i=> new Models.DataModels.Team
+                {
+                    IdTeam = i.id_team,
+                    IdCap = i.id_cap ?? -1,
+                    Name = i.name,
+                }).ToList();
             }
         }
 
         [HttpPost("CreateTeam")]
-        public int CreateTeam(string name)
+        public int CreateTeam([FromBody] string teamName)
         {
             using (IDbConnection db = new NpgsqlConnection(_configuration.GetConnectionString("competition"))) 
             { 
-                return db.Execute($@"INSERT INTO public.team (name) VALUES('{name}') RETURNING id_team;");
+                return db.Execute($@"INSERT INTO public.team (name) VALUES('{teamName}') RETURNING id_team;");
             }
         }
     }

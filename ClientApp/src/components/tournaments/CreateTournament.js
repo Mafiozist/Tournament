@@ -1,75 +1,88 @@
-import { Button, Checkbox, FormControlLabel, FormGroup, Stack, TextField, Tooltip } from "@mui/material";
+import { Button, Checkbox, FormControlLabel, FormGroup, Stack, TextField, Tooltip,IconButton, Typography  } from "@mui/material";
 import { Modal } from "antd";
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import TransferTableList from "./TransferTableList";
+import AddIcon from '@mui/icons-material/Add'
+import { green, red } from "@mui/material/colors";
+import { useCreateTeamMutation } from "../../redux/component/api/teams.api";
+import { useCreateTournamentMutation } from "../../redux/component/api/tournaments.api";
+import { useSnackbar } from 'notistack';
 
 export function CreateTournament(props) {
     const [open, setOpen] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
-    const [modalText, setModalText] = useState('Content of the modal');
+    const [tournament, setTournament] = useState({
+        name: '',
+        place: '',
+        teams: []
+    });
+    const { enqueueSnackbar } = useSnackbar();
+
+    const [createTournament, result] = useCreateTournamentMutation();
 
     const showModal = () => {
         setOpen(true);
     };
 
-    const handleOk = () => {
-        setModalText('The modal will be closed after two seconds');
+    const handleOk = async () => {
         setConfirmLoading(true);
-        setTimeout(() => {
-            setOpen(false);
-            setConfirmLoading(false);
-        }, 2000);
+        var result = await createTournament(tournament).unwrap();
+
+        enqueueSnackbar(result.msg, {variant: result.status === 1? 'success' : 'error'});
+        setOpen(false);
+        setConfirmLoading(false);
+        
     };
 
     const handleCancel = () => {
-        console.log('Clicked cancel button');
         setOpen(false);
     };
 
-    return (//Добавить форму и валидацию
+    const handleSelectedTeams = (teams)=>{
+        console.log('teams', teams);
+        setTournament({...tournament, teams: teams});
+    }
+
+    const handleClearTeams = (teamsToDel)=>{
+        if(!tournament.teams) return;
+
+        let data = tournament.teams.filter( item => !teamsToDel.includes(item));
+        setTournament( {...tournament, teams: data? data : []});
+    }
+
+    return (
         <>
-            <Button type="primary" onClick={showModal}>
-                Open Modal with async logic
-            </Button>
+            <IconButton children={<AddIcon />} style={{ position: 'fixed', bottom: 16, right: 16, backgroundColor: green[300], width: '60px', height: '60px' }} onClick={showModal}/>
 
             <Modal
-                title="Создание турнира"
+                title={<Typography fontSize={25} sx={{display:'flex'}}>Создание турнира</Typography>}
                 open={open}
                 onOk={handleOk}
+                okText="Создать и сохранить"
                 confirmLoading={confirmLoading}
                 onCancel={handleCancel}
+                cancelText="Отмена"
                 width={'50%'}
-                style={{ minWidth: '600px' }}
+                style={{ position:'relative', minWidth:'500px', marginLeft:'auto'}}
             >
 
                 <Stack direction="column" spacing={1}>
 
                     <Stack direction="row" spacing={1} justifyContent="center">
-                        <TextField variant="outlined" label='Название турнира'>
-
-                        </TextField>
-                        <TextField variant="outlined" label='Место проведения' >
-
-                        </TextField>
-
-
-                        <FormGroup>
-                            <Tooltip placement="top" title="Отметьте, если необходимы групповые матчи" arrow>
-                                <FormControlLabel control={<Checkbox defaultChecked />} label="Группа?" />
-                            </Tooltip>
-                            {/* <FormControlLabel required control={<Checkbox />} label="Required" />
-                            <FormControlLabel disabled control={<Checkbox />} label="Disabled" /> */}
-                        </FormGroup>
+                        <TextField variant="outlined" multiline label='Название турнира' value={tournament.name} onChange={(e)=> {setTournament({...tournament, name: e.target.value})}}/>
+                        <TextField variant="outlined" label='Место проведения' value={tournament.place} onChange={(e)=> {setTournament({...tournament, place: e.target.value})}}/>
 
                     </Stack>
 
-                    <TransferTableList />
+                    <FormGroup hidden={true} sx={{width:'fit-content', height:'fit-content'}}>
+                            <Tooltip placement="left" title="Отметьте, если необходимы групповые матчи" arrow >
+                                <FormControlLabel control={<Checkbox />} label="Групповые матчи?" />
+                            </Tooltip>
+                    </FormGroup>
+
+                    <TransferTableList handleSelectedTeams={handleSelectedTeams} clearSelectedTeams={handleClearTeams}/>
 
                 </Stack>
-
-
-
-
 
             </Modal>
         </>

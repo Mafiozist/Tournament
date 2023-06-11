@@ -8,19 +8,23 @@ import reportWebVitals from './reportWebVitals';
 //import { applyMiddleware, combineReducers } from "redux";
 import { Provider } from "react-redux";
 import { store } from './redux/component/store.js';
+import { SnackbarProvider } from 'notistack';
+
 
 const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
 
 root.render(
-    <React.StrictMode>
-        <Provider store={ store }>
-            <BrowserRouter basename={baseUrl}>
-                <App />
-            </BrowserRouter>
-        </Provider>
-    </React.StrictMode>
+    <SnackbarProvider maxSnack={5}>
+        <React.StrictMode>
+            <Provider store={store}>
+                <BrowserRouter basename={baseUrl}>
+                    <App />
+                </BrowserRouter>
+            </Provider>
+        </React.StrictMode>
+    </SnackbarProvider>
 );
 
 // If you want your app to work offline and load faster, you can change

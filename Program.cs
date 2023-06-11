@@ -2,7 +2,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers().AddNewtonsoftJson();
 builder.Services.AddMvc();
 builder.Services.AddSwaggerGenNewtonsoftSupport();
 builder.Services.AddEndpointsApiExplorer();
