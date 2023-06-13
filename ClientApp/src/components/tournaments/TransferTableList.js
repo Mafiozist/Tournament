@@ -106,8 +106,8 @@ export function TransferTableList ({...props}) {
       return;
     };
 
-    setTargetKeys(data.map(i=> ({key: i.idTeam})));
-    setDataSource(data.map(i=> ({...i, key: i.idTeam})));
+    setTargetKeys(data.map(i=> ({key: i.id})));
+    setDataSource(data.map(i=> ({...i, key: i.id})));
   }, [data])
 
   return (

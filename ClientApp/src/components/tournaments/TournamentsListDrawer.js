@@ -7,7 +7,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
-import { Drawer, IconButton, TextField } from '@mui/material';
+import { Button, Drawer, IconButton, TextField, Typography } from '@mui/material';
 import DensityMediumIcon from '@mui/icons-material/DensityMedium';
 import { useGetTournamentsQuery } from '../../redux/component/api/tournaments.api';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -50,7 +50,7 @@ export default function TournamentsListDrawer(props) {
         {
             filteredData? 
                 filteredData.map((tour, index) => (
-                  <ListItem key={tour.id_Tourn} disablePadding sx={{width:'100%', wordBreak:'break-all'}} onClick={()=> props.handleListItemClick(tour.id_Tour,index)}>
+                  <ListItem key={tour.idTour} disablePadding sx={{width:'100%',whiteSpace:'normal'}} onClick={()=> props.handleListItemClick(tour.idTour,index)}>
                       <ListItemButton onClick={toggleDrawer(false)} >
                               <ListItemIcon>
                                   <EmojiEventsIcon/>
@@ -64,7 +64,11 @@ export default function TournamentsListDrawer(props) {
         
                 isLoading? <CircularProgress style={{display:'flex'}}/>
                 
-                : <>{setFilteredData(data)}</>
+                : 
+                
+                <Typography style={{padding:'10px'}}>
+                      Еще не был создан ни один турнир {/*<Button>Создать?</Button>*/ setFilteredData(data)}
+                </Typography>
             
         }
       </List>

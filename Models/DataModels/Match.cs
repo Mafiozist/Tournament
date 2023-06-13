@@ -2,14 +2,15 @@
 {
     public class Match
     {
-        public int IdMatch { get; set; }
-        public int? IdNextMatch { get; set; }
+        public int Id { get; set; }
+        public int? NextMatchId { get; set; }
         public int? IdWinner { get; set; }
         public int IdParent { get; set; }
         public string State { get; set; } = string.Empty;
+        public string Result { get; set; } = string.Empty;
         public int Status { get; set; }
         public bool IsTop { get; set; }
-        public List<Team> Teams { get; set; } = new List<Team>();
+        public List<Team> Participants { get; set; } = new List<Team>();
         public bool IsDeleted { get; set; } = false;
     }
 }

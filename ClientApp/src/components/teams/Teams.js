@@ -79,22 +79,6 @@ export function Teams(props) {
     return (
 
         <Stack spacing={3} direction="row" useFlexGap flexWrap="wrap" >
-            <LoadingButton loading={loading} variant='outlined'
-                onClick={
-                    ()=> {
-                        
-                        let obj = {teamName:"КомандаТест"};
-                        setLoading(true); 
-                        createTeam(obj).then(res=>{
-                            setLoading(false);
-                            //alert(result);
-                        }, (err)=>{
-                            setLoading(false);
-                            alert(err);
-                        })
-                    }
-                }
-            />
             {showContent && (
                 <>
                     <RenderCard showContent={showContent} timeout={timeout} flipped={flipped} clicked={()=> setFlipped(!flipped)}/>

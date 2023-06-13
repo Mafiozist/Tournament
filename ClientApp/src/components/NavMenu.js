@@ -47,9 +47,9 @@ export class NavMenu extends Component {
 
     render() {
         return (
-            <header>
+            <header {...this.props}>
                
-                <Tabs value={this.state.tab} onChange={(event, val) => this.setState({ tab: val })} className="navbar-expand-sm border-bottom box-shadow mb-2" centered>
+                <Tabs value={this.state.tab} onChange={(event, val) => this.setState({ tab: val })} className="navbar-expand-sm border-bottom box-shadow mb-2" centered >
                     <Tab component={Link} to={AppRoutes[0].path} icon={<HomeSharpIcon />} iconPosition='top' label="Главная" />
                     <Tab component={Link} to={AppRoutes[1].path} icon={<BugReportSharpIcon />} iconPosition='top' label="Фичи" />
                     <Tab component={Link} to={AppRoutes[2].path} icon={<PersonPinIcon />} iconPosition='top' label="Участники" />

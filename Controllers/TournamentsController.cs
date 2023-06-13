@@ -107,8 +107,8 @@ namespace Tournament.Controllers
 
             var childrenIndex = Convert.ToInt32(Math.Floor(leftSub.Count / 2d));
 
-            leftSub.ElementAt(childrenIndex).IdNextMatch = matches[rootIndex].IdMatch;
-            righSub.ElementAt(childrenIndex).IdNextMatch = matches[rootIndex].IdMatch;
+            leftSub.ElementAt(childrenIndex).NextMatchId = matches[rootIndex].Id;
+            righSub.ElementAt(childrenIndex).NextMatchId = matches[rootIndex].Id;
 
             LinkMatches(ref leftSub);
             LinkMatches(ref righSub);
@@ -157,57 +157,68 @@ namespace Tournament.Controllers
                     var matches =  db.Query($"SELECT * FROM public.tourn_match WHERE id_tourn='{idTour}';")
                         .Select(i => new Models.DataModels.Match()
                         {
-                            IdMatch = (int) i.id_tourn_match,
-                            Teams = new List<Team>(){ new Team() { IdTeam = (int) (i.id_team1 ?? 0) }, new Team() { IdTeam = (int) (i.id_team2 ?? 0)} },
+                            Id = (int) i.id_tourn_match,
+                            Participants = new List<Team>(){ new Team() { Id = (int) (i.id_team1 ?? 0) }, new Team() { Id = (int) (i.id_team2 ?? 0)} },
                             IsTop = i.is_top,
-                            IdNextMatch= (int) (i.id_next_tourn_match ?? 0)
+                            NextMatchId= (int) (i.id_next_tourn_match ?? 0),
+                            IdParent = idTour
                         }).ToList();
 
+                    //Соединяем матчи
                     LinkMatches(ref matches);
-
                     matches[Convert.ToInt32(Math.Floor(matches.Count / 2d))].IsTop = true;
+                    
                     bool switcher = true;
-                    //Заполняем матчи id команд и статусами
-                    for (int i = 0, tmpDummy = countOfMatches.DummyMatches, tmpReal = countOfMatches.RealMatches; i < matches.Count; ++i)
+                    var referenceMatches = matches.Where(i=> i.NextMatchId !=0)
+                                                   .Select(node => node.NextMatchId)
+                                                   .Distinct()
+                                                   .ToList();
+
+                    var firstRoundMatches = matches.Where(i => !referenceMatches.Contains(i.Id))
+                                                   .Distinct()
+                                                   .ToList();
+
+                    int tmpDummy = countOfMatches.DummyMatches;
+                    int tmpReal = countOfMatches.RealMatches;
+                    foreach (var match in firstRoundMatches)
                     {
-                        //Если матч имеет следующие матчи т.е не рут и на матч никто не ссылается
-                        if (matches[i].IdNextMatch != 0 && matches.FindAll(m => m.IdNextMatch == matches[i].IdMatch).Count == 0)
+
+                        if (switcher && tmpReal!=0)//Переключатель для того чтобы не было подряд идущих пустых команд по началу
                         {
+                            var item = matches.Find(i => i.Id == match.Id);
+                                item.Participants[0].Id = teamsToManage.Dequeue();
+                                item.Participants[1].Id = teamsToManage.Dequeue();
+                            --tmpReal;
+                            if (tmpDummy > 0) switcher = false; 
+                        }
+                        else if (!switcher && tmpDummy > 0)//DummyMatches
+                        {
+                            int Id = teamsToManage.Dequeue();
+                            var item = matches.Find(i => i.Id == match.Id);
+                            item.Participants[0].Id = Id;
+                            item.Status = 1;//Завершен, потому что матч пустышка
+                            item.IdWinner = Id;
 
-                            if (switcher)//Переключатель для того чтобы не было подряд идущих пустых команд по началу
-                            {
-                                
-                                if(countOfMatches.DummyMatches < countOfMatches.RealMatches)
-                                {
-                                    matches[i].Teams[0].IdTeam = teamsToManage.Dequeue();
-                                    matches[i].Teams[1].IdTeam = teamsToManage.Dequeue();
-                                }
-                                else if(tmpDummy == 0 && countOfMatches.DummyMatches > countOfMatches.RealMatches)
-                                {
-                                    matches[i].Teams[0].IdTeam = teamsToManage.Dequeue();
-                                }
-
-                                if (tmpDummy > 0) { switcher = false; --tmpDummy; }
+                            var partId = matches.Find(m => m.Id == match.NextMatchId).Participants[0].Id;
+                            
+                            if (partId == null || partId == 0)
+                            {  //Устанавливаем в следующий матч команду пустышку
+                                matches.Find(m => m.Id == match.NextMatchId).Participants[0].Id = Id;
                             }
-                            else if (!switcher && tmpDummy > 0)
-                            {
-                                int idTeam = teamsToManage.Dequeue();
-                                matches[i].Teams[0].IdTeam = idTeam;
-                                matches[i].Status = 1;//Завершен, потому что матч пустышка
-                                matches.Find(m=> m.IdMatch == matches[i].IdNextMatch).Teams[0].IdTeam = idTeam; //Устанавливаем в следующий матч команду пустышку
-
-                                switcher = true;
-                            }
+                            else matches.Find(m => m.Id == match.NextMatchId).Participants[1].Id = Id;
+                            
+                            --tmpDummy;
+                            if(tmpReal > 0) switcher = true;
                         }
                     }
 
 
                     //Обновить все связ в матчах к базе
-                    var updateStmTemplate = new String("UPDATE tourn_match SET id_team1=@idTeam1, id_team2=@idTeam2, id_next_tourn_match=@idNextMatch, id_tourn=@idTourn, is_top=@isTop WHERE id_tourn_match=@idMatch");
+                    var updateStmTemplate = new String("UPDATE tourn_match SET id_team1=@idTeam1, id_team2=@idTeam2, id_next_tourn_match=@idNextMatch, id_tourn=@idTourn, is_top=@isTop, id_winner=@idWinner, status=@Status WHERE id_tourn_match=@idMatch");
 
                     foreach (var match in matches)
                     {
-                        db.Execute(updateStmTemplate, new { idTeam1 = match?.Teams[0]?.IdTeam, idTeam2 = match?.Teams[1]?.IdTeam, idNextMatch=match?.IdNextMatch,  idTourn=match.IdParent, isTop=match.IsTop,  idMatch=match.IdMatch }, transaction);
+                        db.Execute(updateStmTemplate, new { idTeam1 = match?.Participants[0]?.Id, idTeam2 = match?.Participants[1]?.Id, idNextMatch=match?.NextMatchId,  idTourn=match.IdParent, isTop=match.IsTop,  idMatch=match.Id, idWinner=match.IdWinner, Status=match.Status }, transaction);
                     }
 
                     res.Data = null;
@@ -233,7 +244,57 @@ namespace Tournament.Controllers
         {
             using (IDbConnection db = new NpgsqlConnection(_configuration.GetConnectionString("competition")))
             {
-                return db.Query<Models.DataModels.Tournament>($@"SELECT * FROM public.tournament;");
+                return db.Query($@"SELECT * FROM public.tournament;").Select(i=> new Models.DataModels.Tournament()
+                {
+                    IdTour=i.id_tour,
+                    Name=i.name,
+                    IsEnded=i.is_ended,
+                }).ToList();
+            }
+        }
+
+        [HttpPut("UpdateMatches")]
+        public Request UpdateWinnerMatches(List<MatchInfo> matches)
+        {
+            Request res = new Request();
+
+            using (IDbConnection db = new NpgsqlConnection(_configuration.GetConnectionString("competition")))
+            {
+                try
+                {
+                    db.Open();
+                    var transaction = db.BeginTransaction();
+
+                    foreach (var match in matches)
+                    {
+                        //Обновляем состояние текущего матча
+                        db.Execute($"UPDATE tourn_match SET id_winner=@idWinner, result=@Result, status=1 WHERE id_tourn_match=@IdMatch", new { match.IdWinner, match.Result, match.IdMatch }, transaction);
+
+                        //Если есть победители в матче
+                        if(match.IdNextMatch != -1 && match.IdWinner > 1)
+                        {
+                            string qry = $@"UPDATE tourn_match SET id_team1 = (CASE WHEN part.id_team1>0 THEN part.id_team1 ELSE {match.IdWinner} END),
+                                                                 id_team2 = (CASE WHEN part.id_team2>0 THEN part.id_team2 ELSE {match.IdWinner} END)
+                                          FROM (SELECT id_team1, id_team2 FROM tourn_match WHERE id_tourn_match={match.IdNextMatch}) AS part
+                                          WHERE id_tourn_match = '{match.IdNextMatch}';";
+
+                            db.Execute(qry, transaction);
+
+                        }
+
+                        
+                    }
+
+                    
+                    transaction.Commit();
+                    return res;
+                }
+                catch (Exception ex) 
+                {
+                    res.Msg = ex.Message;
+                    res.Status = -1;
+                    return res;
+                }
             }
         }
 
@@ -248,26 +309,51 @@ namespace Tournament.Controllers
                                     ,tm.id_tourn  
                                     ,tm.status
                                     ,tm.is_top
+                                    ,tm.result
                                     ,te.id_team id_team1
-                                    ,te.name FirstTeamName
+                                    ,te.name first_team_name
                                     ,te2.id_team id_team2
-                                    ,te2.name SecondTeamName
+                                    ,te2.name second_team_name
                                     FROM public.tourn_match tm
                                     LEFT JOIN public.team te ON te.id_team = tm.id_team1
                                     LEFT JOIN public.team te2 ON te2.id_team = tm.id_team2
                                     WHERE tm.id_tourn='{idTour}';")
                     .Select(i => new Match
                     { 
-                        IdMatch = Convert.ToInt32(i.id_tourn_match ?? -1),
-                        IdNextMatch = Convert.ToInt32(i.id_next_tourn_match ?? -1),
+                        Id = Convert.ToInt32(i.id_tourn_match ?? null),
+                        NextMatchId = Convert.ToInt32(i.id_next_tourn_match ?? -1),
                         IdWinner = Convert.ToInt32(i.id_winner ?? -1),
                         IdParent = Convert.ToInt32(i.id_tourn ?? -1),
                         Status = i.status,
+                        Result = i.result,
+                        State =  i.status==1? "SCORE_DONE" : "",
                         IsTop = i.is_top,
-                        Teams = new List<Team>() { new Team() { IdTeam = Convert.ToInt32(i.id_team1 ?? -1), Name=i.FirstTeamName }, new Team() { IdTeam = Convert.ToInt32(i.id_team2 ?? -1), Name = i.SecondTeamName } 
+                        Participants = new List<Team>() { 
+                        new Team() { 
+                            Id = Convert.ToInt32(i.id_team1 ?? -1), 
+                            Name=i.first_team_name, 
+                            ResultText= String.IsNullOrEmpty(i.result)? "" : Convert.ToString(i.result).Split('/')[0],
+                            IsWinner = (i.id_winner == i.id_team1 && i.id_winner != -1),
+                            Status = GetMemberStatusOfMatch((int ?) i.id_team1, (int ?) i.id_team2, (int ?) i.status, (int ?) i.id_winner),
+                        }, 
+                        new Team() {
+                            Id = Convert.ToInt32(i.id_team2 ?? -1), 
+                            Name = i.second_team_name,
+                            ResultText= String.IsNullOrEmpty(i.result)? "" : Convert.ToString(i.result).Split('/')[1],
+                            IsWinner = (i.id_winner == i.id_team2 && i.id_winner != -1),
+                            Status = GetMemberStatusOfMatch( (int?) i.id_team2, (int?) i.id_team1, (int ?) i.status, (int ?) i.id_winner),
+                        } 
                     }
                 });
             }
+        }
+
+        private string GetMemberStatusOfMatch(int? team, int? opponent, int? matchStatus, int? winner)
+        {
+            if (team != null && team == winner && opponent > 0) return "PLAYED";
+            else if (team != null && matchStatus == 1 && (opponent==null || opponent <= 0)) return "WALK_OVER";
+            else return null;
+
         }
     }
 }

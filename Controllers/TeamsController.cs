@@ -25,7 +25,7 @@ namespace Tournament.Controllers
             {
                 return db.Query($@"SELECT * FROM public.team;").Select(i=> new Models.DataModels.Team
                 {
-                    IdTeam = i.id_team,
+                    Id = i.id_team,
                     IdCap = i.id_cap ?? -1,
                     Name = i.name,
                 }).ToList();

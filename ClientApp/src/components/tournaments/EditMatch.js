@@ -8,43 +8,60 @@ import { Label } from 'reactstrap';
 import Button from '@mui/material/Button';
 import { useActions } from '../../redux/hooks/useActions';
 import { useGetTeamsQuery } from '../../redux/component/api/teams.api';
+import { useUpdateMatchesMutation } from '../../redux/component/api/matches.api';
 
 export function EditMatch(props) {
     const [winner, setWinner] = useState(false);
     const [winner2, setWinner2] = useState(false);
-    const [res, setRes] = useState('');
+    const [res, setRes] = useState({
+        res1:'',
+        res2:'',
+    });
     const [res2, setRes2] = useState('');
     const {updateMatch, moveWinnerForward} = useActions();
+    const [ updateMatches, result] = useUpdateMatchesMutation();
+
+    const disabled = props.match?.status === 1? true : false; 
 
     const limited_inputs_style = {
         float: 'right',
         width: '60px',
         maxHeight: '40px',
-        margin: 'auto',
+        marginLeft: '6px',
     }
     
+    const label_style ={
+        width: '70px',
+        wordBreak: 'break-all'
+    }
+
     useEffect(()=>{
         if(!props.match || props.match.participants.length < 1) return;
+        console.log(props.match)
 
-        if(props.match.participants[0]?.isWinner){
+        if(props.match.participants[0].id === props.match.idWinner && props.match.participants[0].id !== -1){
             setWinner(true);
-        }else if (props.match.participants[1]?.isWinner){
+        }else if (props.match.participants[1].id === props.match.idWinner && props.match.participants[1].id !== -1){
             setWinner2(true);
         }else{
             setWinner(false);
             setWinner2(false);
         }
-
+        
+        if(props.match.result){
+            setRes({res1: props.match.participants[0].resultText, res2: props.match.participants[1].resultText});
+        }else setRes({res1: '', res2: ''});
     }, [props.match]);
 
     const handleSave = () => {
 
-        if(winner | winner2){
-            updateMatch({match: props.match, winIndex: winner? 0 : 1});
-            moveWinnerForward(props.match);
-        }else{
-            updateMatch({match: props.match, winIndex: undefined})
-        }
+        updateMatches([{
+            IdMatch:props.match.id,
+            IdTour:props.match.idParent,
+            IdNextMatch:props.match.nextMatchId,
+            IdWinner: winner? props.match.participants[0].id : winner2? props.match.participants[1].id : -1,
+            Result: `${res.res1}/${res.res2}`}
+        ]);
 
         props.close();
     };
@@ -69,14 +86,14 @@ export function EditMatch(props) {
 
                         <Stack direction="row" className='mb-2' spacing={{ md: 1 }} >
 
-                            <Label size='100' style={{ width: '70px' }}>
-                                <Typography display="inline" style={{ wordBreak: "break-all", paddingRight: '7px' }}>
+                            <Label size='100' style={label_style}>
+                                <Typography display="inline" style={{ paddingRight: '7px' }}>
                                     {props.match.participants[0].name}
                                 </Typography>
                             </Label>
 
-                            <Input className='ml-5 mr-5' style={limited_inputs_style} variant="filled" placeholder='Исход' required={true} onChange={e=> setRes(e.target.value)}>{res}</Input>
-                            <IconButton aria-label='check' style={limited_inputs_style} onClick={(e) => { setWinner(!winner); setWinner2(false); }}>
+                            <Input  style={limited_inputs_style} variant="filled" hidden={disabled} disabled={disabled} placeholder='Исход' required={true} onChange={e=> setRes({...res, res1:e.target.value})}>{res?.res1}</Input>
+                            <IconButton aria-label='check' style={limited_inputs_style} disabled={disabled} onClick={(e) => { setWinner(!winner); setWinner2(false); }}>
                                 {
                                     winner ?
                                         <EmojiEventsIcon />
@@ -88,13 +105,13 @@ export function EditMatch(props) {
                         </Stack>
 
                         <Stack direction="row" spacing={{ md: 1 }} style={{ maxWidth: '200px' }}>
-                            <Label size='100' style={{ width: '70px' }}>
-                                <Typography display="inline" style={{ wordBreak: "break-all", paddingRight: '7px' }}>
+                            <Label size='100' style={label_style}>
+                                <Typography display="inline" style={{paddingRight: '7px' }}>
                                     {props.match.participants[1].name}
                                 </Typography>
                             </Label>
-                            <Input className='ml-5 mr-5 limited-inputs' style={limited_inputs_style} variant="filled" placeholder='Исход' required={true} onChange={e=> setRes2(e.target.value)}>{res2}</Input>
-                            <IconButton aria-label='check' className='limited-inputs' style={limited_inputs_style} onClick={(e) => { setWinner2(!winner2); setWinner(false); }}>
+                            <Input className='limited-inputs' style={limited_inputs_style} hidden={disabled} disabled={disabled} variant="filled" placeholder='Исход' required={true} onChange={e=> setRes({...res, res2: e.target.value})}>{res?.res2}</Input>
+                            <IconButton aria-label='check' className='limited-inputs' disabled={disabled} style={limited_inputs_style} onClick={(e) => { setWinner2(!winner2); setWinner(false); }}>
                                 {
                                     winner2 ?
                                         <EmojiEventsIcon />
@@ -105,7 +122,7 @@ export function EditMatch(props) {
                         </Stack>
 
                         {
-                            props.match.participants[0].id && props.match.participants[1].id || (!props.match.participants[0]?.isWinner || !props.match.participants[1]?.isWinner)?
+                            (props.match.status !== 1 || !props.match.status)?
 
                                 <Button style={{ float: 'right', margin: '5px' }} variant="outlined" onClick={handleSave} > Save</Button> /*НУЖНА ЗАГРУЗКА*/
                                 :

@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SingleEliminationBracket, Match } from '@g-loot/react-tournament-brackets';
+import { SingleEliminationBracket, Match, SVGViewer } from '@g-loot/react-tournament-brackets';
 import EditMatch from './EditMatch.js'
-import { Stack } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { useActions } from '../../redux/hooks/useActions';
 import { deepClone } from '@mui/x-data-grid/utils/utils.js';
 import { CreateTournament } from './CreateTournament.js';
 import { useGetTournamentsQuery } from '../../redux/component/api/matches.api.js';
 import TournamentsListDrawer from './TournamentsListDrawer.js';
 import { useGetMatchesQuery } from '../../redux/component/api/matches.api.js';
+import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
+import './Tourn.css'
+import cloneDeep from "lodash";
 
 var ReactDOM = require('react-dom');
 
@@ -31,12 +34,10 @@ function useWindowSize() {
         return () => {
             window.removeEventListener('resize', handleResize);
         };
-    }, []); // Empty dependency array to run the effect only once
+    }, []); 
 
     return windowSize;
 }
-
-const idTourn = 127;
 
 export function Tournaments() {
 
@@ -75,11 +76,13 @@ export function Tournaments() {
     const handleListItemClick = (id, index) => {
         console.log('ClickedItem', {id, index});
         setSelectedIndex(id);
+        
+        console.log('recivedData',data); 
     };
 
-    // useEffect(()=>{
-    //     setCurrentMatches(deepClone(data));
-    // }, [data])
+    useEffect(()=>{
+         setCurrentMatches(deepClone(data));
+    }, [data])
 
     return (//Будет реализован master-detailed интерфейс при клике на турнир выскакивает информацию по нему
 
@@ -99,9 +102,11 @@ export function Tournaments() {
                                 matchComponent={Match}
                                 onMatchClick={handleMatchClick}
                                 onPartyClick={handleMouseEnter}
-                                //width={windowSize.width}
-                                //height={windowSize.height}
-
+                                svgWrapper={({ children, ...props }) => (
+                                    <SVGViewer width={windowSize.width} height={windowSize.height - 150}  {...props}>
+                                      {children}
+                                    </SVGViewer>
+                                )}
                             />
 
                                 <EditMatch 
@@ -112,7 +117,9 @@ export function Tournaments() {
                                     open={() => setPopoverOpen(true)} />
                         </div>
                     :
-                        <div>Loadimg...</div>
+                       <Typography style={{ position: 'fixed', top: 95, left: 65, }}>
+                            <KeyboardBackspaceIcon className='pulse' /> Выберите турнир
+                       </Typography>
 
                 }
 
