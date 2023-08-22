@@ -63,13 +63,13 @@ export default function EditDialog(props) {
 
                         <TextField
                             margin="dense"
-                            id="second_name"
+                            id="last_name"
                             label="Фамилия"
                             type="text"
                             variant="outlined"
-                            value={member.second_name}
+                            value={member.last_name}
                             onChange={e => {
-                                setMember({...member, second_name: e.target.value});
+                                setMember({...member, last_name: e.target.value});
                             }}
                             style={{gridColumn: 1, gridRow: 2}}
                         />

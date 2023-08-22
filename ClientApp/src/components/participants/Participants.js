@@ -1,235 +1,235 @@
-import React, { useEffect, useState } from "react";
-import { Component } from "react";
-import {IconButton, InputLabel, Popover, TextField } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import Stack from '@mui/material/Stack';
-import { SpeedDial, SpeedDialAction, Backdrop, SpeedDialIcon } from "@mui/material";
-import {LoadingButton} from "@mui/lab"
-
+import React, { useEffect, useState, useRef } from "react";
+import { IconButton, Tooltip, MenuItem} from '@mui/material';
+import { DataGrid, GridActionsCellItem, GridEditSingleSelectCell, GridRowModes } from '@mui/x-data-grid';
+import './Participants.css';
 //icons
-import FileCopyIcon from '@mui/icons-material/FileCopyOutlined';
 import SaveIcon from '@mui/icons-material/Save';
-import PrintIcon from '@mui/icons-material/Print';
-import ShareIcon from '@mui/icons-material/Share';
-import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import UndoIcon from '@mui/icons-material/Undo';
-import Tooltip from '@mui/material/Tooltip';
-import { Select,FormControl,MenuItem } from "@mui/base";
-import { GridApi ,useGridApiContext,useGridApiRef } from '@mui/x-data-grid';
-import EditDialog from "./EditDialog";
+import CloseIcon from '@mui/icons-material/Close'
+import HistoryIcon from '@mui/icons-material/History'
+import { useGridApiRef } from '@mui/x-data-grid';
 import { useParticipants } from "../../redux/hooks/useParticipants";
 import { useActions } from "../../redux/hooks/useActions";
-import { Button } from "reactstrap";
-import { event } from "jquery";
-import { green, red } from "@mui/material/colors";
+import { green } from "@mui/material/colors";
+import { useSnackbar } from 'notistack';
+import { useEditOrCreateParticipantMutation, useGetParticipantsQuery,useGetRolesQuery } from "../../redux/component/api/participants.api";
+var locale = require('../../common/locale.js');
 
 //This component is worked for adding new users and represent them somehow
-
-const actions = [
-    {icon: <AddIcon/>, name: 'Добавить'},
-    { icon: <FileCopyIcon />, name: 'Copy' },
-    { icon: <SaveIcon />, name: 'Save' },
-    { icon: <PrintIcon />, name: 'Print' },
-    { icon: <ShareIcon />, name: 'Share' },
-];
-
-export function Participants() {
-    const [loading, setLoading]= useState(false);
-    const [open, setOpen] = React.useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
-    const handleOpenAddDialog = () =>{
-        setAddState(true);
-        handleClose();
-        setShowEditDialog({open: true, id: undefined});
-    }
+export function Participants(props) {
     const apiRef = useGridApiRef();
-    const [addState, setAddState] = useState(false);
-
-    //edit-form
-    const [showEditDialog, setShowEditDialog] = useState({open: false, id: 0});
-
-    const {members} = useParticipants();
-    const { addToParticipants, setRemoveFromParticipants, setRowLoading} = useActions();
-
-    //const [age, setAge] = React.useState(12);
-
     const [columnVisibilityModel, setColumnVisibilityModel] = React.useState({
-        "patronymic": false,
-        second_name: false,
+        patronymic: false,
+        last_name: false,
         first_name: false,
-        id:false,
-        is_deleted:false,
-    }); 
+        id: false,
+    });
+    const [dataSource, setDataSource] = useState([]);
+    const [rowModesModel, setRowModesModel] = useState({});
+    const { enqueueSnackbar } = useSnackbar(); //Сообщения
+    const [pageModel, setPageModel] = useState({
+        page:0,
+        pageSize: 10
+    });
 
-    const columns = [
-        { field: 'id', headerName: 'ID', width: 70 },
-        { field: 'second_name', headerName: 'Фамилия'},
-        { field: 'first_name', headerName: 'Имя'},
-        { field: 'patronymic', headerName: 'Отчество'},
-        {
-            field: 'full_name',
-            headerName: 'ФИО',
-            description: 'This column has a value getter and is not sortable.',
-            sortable: false,
-            width: 160,
-            flex: 1,
-            valueGetter: (params) =>
-              `${params.row.second_name || ''} ${params.row.first_name || ''} ${params.row.patronymic || ''}` ,
-        },
-        { field: 'age', headerName: 'Возраст',flex: 1, },
-        { field: 'gender', headerName: 'Пол'},
-        { field: 'role', headerName: 'Роль',flex: 1,},
-        { field: 'depart', headerName: 'Отдел/Цех',flex: 1,},
-        {
-          field: 'is_deleted',
-          headerName: 'Удален',
-          type: 'boolean',
-          //renderCell: (str)=> str;
-        },
-        {
-            field: 'action',
-            headerName: '',
-            width: 180,
-            sortable: false,
-            //disableClickEventBubbling: true,
+    //redux toolkit
+    //const { members } = useParticipants();
+    //const { addToParticipants, setRemoveFromParticipants, setRowLoading } = useActions();
 
-            renderCell: (params) => {
+    //rtk query
+    const  {data, isLoading, isSuccess, isError} = useGetParticipantsQuery();
+    const [saveParticipant, result] =  useEditOrCreateParticipantMutation();
+    //const {roles} = useGetRolesQuery();
 
-                const remove = (e) => {
-                  setRowLoading({row: params.row, loading: true});
-                  const currentRow = params.row;
-                  
-                  setTimeout(() => {
-                    setRemoveFromParticipants({row: currentRow, is_deleted: true});
-                  }, 400);
-                };
-                
-                const back = (e) => {
-                    setRowLoading({row: params.row, loading: true});
-                    const currentRow = params.row;
-                    
-                    setTimeout(() => {
-                        setRemoveFromParticipants({row: currentRow, is_deleted: false});
-                    }, 400);
-                };
+    useEffect(()=>{
+        setDataSource(data? data: []);
+    }, [isSuccess]);
 
-                return (
-                    
-                    params.row.is_deleted?
+    const handleRowEditStop = (id, addMode = false) => {
+        //console.log(id,addMode);
+        if(addMode) handleRowDeleteClick(id);
 
-                            <Tooltip title="Вернуть" placement="right">
-                                <LoadingButton loading={params.row.loading}  variant="text" loadingPosition="center" onClick={back}><UndoIcon/></LoadingButton>
-                            </Tooltip>
-                            :
-                            <Tooltip title="Удалить" placement="right"> 
-                                <LoadingButton loading={params.row.loading} variant="text" color="error" loadingPosition="center" onClick={remove}><DeleteIcon/></LoadingButton >
-                            </Tooltip>
-                    
-                );
-            },
-        },
-      ];
-      
-      const rows = [
-        { id: 1, first_name: 'Snow', second_name: 'Jon', patronymic:'Олегович', age: 33, gender: 'М', role: 'участник',depart: 1, is_deleted: false, loading: false },
-        { id: 2, first_name: 'SnowSnow', second_name: 'Jon', patronymic:'Олегович', age: 23, gender: 'М', role: 'участник',depart: 2, is_deleted: false, loading: false },
-        { id: 3, first_name: 'Snow', second_name: 'Jon', patronymic:'Олегович', age: 41, gender: 'М', role: 'участник',depart: 3, is_deleted: false, loading: false },
-        { id: 4, first_name: 'SnowSnow', second_name: 'Jon', patronymic:'Олегович', age: 12, gender: 'М', role: 'участник',depart: 4, is_deleted: false, loading: false },
-        { id: 5, first_name: 'Snow', second_name: 'Json', patronymic:'Олегович', age: 32, gender: 'М', role: 'участник',depart: 5, is_deleted: true, loading: false },
-        { id: 6, first_name: 'Snow', second_name: 'Json', patronymic:'Олегович', age: 33, gender: 'М', role: 'участник',depart: 6, is_deleted: false, loading: false },
-        { id: 7, first_name: 'Sanow', second_name: 'Json', patronymic:'Олегович', age: 44, gender: 'М', role: 'участник',depart: 7, is_deleted: false, loading: false },
-        { id: 8, first_name: 'Snow', second_name: 'Josn', patronymic:'Олегович', age: 55, gender: 'М', role: 'участник',depart: 8, is_deleted: true, loading: false },
-        { id: 9, first_name: 'Snaow', second_name: 'Jon', patronymic:'Олегович', age: 12, gender: 'М', role: 'участник',depart: 9, is_deleted: false, loading: false },
-        { id: 10, first_name: 'SnowSnow', second_name: 'Joxn', patronymic:'Олегович', age: 123, gender: 'М', role: 'участник',depart: 10, is_deleted: false, loading: false },
-        { id: 11, first_name: 'Snasow', second_name: 's', patronymic:'Олегович', age: 332, gender: 'М', role: 'участник',depart: 11, is_deleted: false , loading: false},
-        { id: 12, first_name: 'Snsdaow', second_name: 'Jon', patronymic:'Олегович',age: 22, gender: 'М', role: 'участник',depart: 12, is_deleted: false, loading: false },
-        { id: 13, first_name: 'Snosw', second_name: 'Jsson', patronymic:'Олегович',age: 55, gender: 'М', role: 'участник',depart: 13, is_deleted: false, loading: false },
-        { id: 14, first_name: 'Sansaow', second_name: 'Jon', patronymic:'Олегович',age: 77, gender: 'М', role: 'участник',depart: 14, is_deleted: false, loading: false },
-        { id: 15, first_name: 'Snsaow', second_name: 'Josan', patronymic:'Олегович',age: 6, gender: 'М', role: 'участник',depart: 15, is_deleted: false, loading: false },
-        { id: 16, first_name: 'S1anow', second_name: 'Jon', patronymic:'Олегович',age: 3566, gender: 'М', role: 'участник',depart: 16, is_deleted: false, loading: false },
-        { id: 17, first_name: 'Sn2ow', second_name: 'Jon', patronymic:'Олегович',age: 35, gender: 'М', role: 'участник',depart: 17, is_deleted: false, loading: false },
-        { id: 18, first_name: 'Sndaow', second_name: 'Jon', patronymic:'Олегович',age: 345, gender: 'М', role: 'участник',depart: 18, is_deleted: false, loading: false },
-        { id: 19, first_name: 'Sndsaow', second_name: 'Jon', patronymic:'Олегович',age: 345, gender: 'М', role: 'участник',depart: 19, is_deleted: false, loading: false },
-        { id: 20, first_name: 'Snasow', second_name: 'Jon', patronymic:'Олегович',age: 3565, gender: 'М', role: 'участник',depart: 20, is_deleted: false, loading: false },
-        { id: 21, first_name: 'Ssnow', second_name: 'Jon', patronymic:'Олегович',age: 3545, gender: 'М', role: 'участник',depart: 21, is_deleted: false, loading: false },
-        { id: 22, first_name: 'Ssnow', second_name: 'Jon', patronymic:'Олегович',age: 456, gender: 'М', role: 'участник',depart: 22, is_deleted: true, loading: false },
-        { id: 23, first_name: 'Snoaw', second_name: 'Jon', patronymic:'Олегович',age: 3555, gender: 'М', role: 'участник',depart: 23, is_deleted: false, loading: false },
-        { id: 24, first_name: 'Snow', second_name: 'Jon', patronymic:'Олегович',age: 3545, gender: 'М', role: 'участник',depart: 24, is_deleted: false, loading: false },
-        { id: 25, first_name: 'Sanow', second_name: 'Jon', patronymic:'Олегович',age: 354645, gender: 'М', role: 'участник',depart: 22, is_deleted: false, loading: false },
-        { id: 26, first_name: 'Snow', second_name: 'Jon', patronymic:'Олегович',age: 359, gender: 'М', role: 'участник',depart: 26, is_deleted: false, loading: false },
-        { id: 27, first_name: 'Snsow', second_name: 'Jon', patronymic:'Олегович',age: 305, gender: 'М', role: 'участник',depart: 23, is_deleted: false, loading: false },
-        { id: 28, first_name: 'Snow', second_name: 'Jon', patronymic:'Олегович',age: 315, gender: 'М', role: 'участник',depart: 12, is_deleted: false, loading: false },
-        { id: 29, first_name: 'Snow', second_name: 'Jon',patronymic:'Олегович', age: 325, gender: 'М', role: 'участник',depart: 21, is_deleted: false, loading: false },
-      ];
-    
+        setColumnVisibilityModel({ ...columnVisibilityModel, patronymic: false, last_name: false, first_name: false, full_name: true })
+        apiRef.current.setColumnVisibilityModel(columnVisibilityModel);
+        
+        if(!addMode) setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View, ignoreModifications: true } })
+    }
+
+    const handleRowDeleteClick = (id) =>{
+        if (id <= 0){
+            //apiRef.current.updateRows([{id: id, _action: 'delete'}]);
+            setDataSource(dataSource.filter(i=> i.id!==id));
+            return;
+        }
+
+
+    }
+
+    const handleRowEditStart = (id, addMode=false) =>  {
+        setColumnVisibilityModel({...columnVisibilityModel,patronymic:true, last_name: true, first_name: true, full_name: false });
+        apiRef.current.setColumnVisibilityModel(columnVisibilityModel);
+        setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit, isNew: addMode} });
+    }
+
+    const handleSaveClick= (id) => {
+        setColumnVisibilityModel({...columnVisibilityModel,patronymic:false, last_name: false, first_name: false, full_name: true })
+        setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } })
+    }
+
+    const processRowUpdate = (newRow, oldRow)=>{
+        const updatedRow = {...newRow, isNew: false};
+
+        //TODO:Добавить функцию загрузки строки
+        saveParticipant(newRow).then(succ=>{
+            enqueueSnackbar(succ.data.msg, {variant:succ.data.status===1? "success" : "error"});
+        })
+        .catch((failed)=>enqueueSnackbar(locale.defaultErrorMessage, {variant:'error'}));
+        
+        return updatedRow;
+    }
+
+    const addValueToDS = async (value)=>{
+        apiRef.current.setPage(0);
+        setDataSource((current)=> [value, ...current],);
+    }
 
     return (
 
-        <div>
-            <EditDialog id={addState? '' : showEditDialog.id} visible={showEditDialog.open} close={setShowEditDialog} addState={addState}/> 
-            <Button onClick={()=> {
-                setLoading(true);
-                setTimeout(() => {
-                    rows.forEach(item => {
-                        console.log('Готовлюсь грузить', {...item});
-                        addToParticipants({...item})
-                    })
-                    setLoading(false);
-                }, 1000);
-
-            }}>Задать состояния</Button>
-            <Button onClick={()=> {console.log(members)}}>Показать состояния</Button>
-        
-            <DataGrid 
-                apiRef={apiRef}
-                loading={loading}
-                rows={members? members : ''}
-                columns={columns}
+        <div style={{width:'100%', height:'100%'}}>
+            <DataGrid
+                density="comfortable"
+                showCellVerticalBorder
+                showColumnVerticalBorder
                 initialState={{
-                    
+                    pagination: {paginationModel: pageModel}
+                }}
+                paginationModel={pageModel}
+                onPaginationModelChange={(model, details)=> setPageModel({page: model.page, pageSize: model.pageSize})}
+                pageSizeOptions={[10,20,50]}
+                editMode="row"
+                //onCellDoubleClick={(params, event)=> event.stopPropagation()}
+                onCellKeyDown={(params, event)=> event.stopPropagation()}
+                apiRef={apiRef}
+                onRowEditStop={(params, event) => handleRowEditStop(params.id)}
+                onRowEditStart={(params, event) => handleRowEditStart(params.id)}
+                //onCellEditStop={(params, event) => handleRowEditStop(params.id)}
+                //onCellEditStart={(params, event) => handleRowEditStart(params.id)}
+                processRowUpdate={processRowUpdate}
+                loading={isLoading}
+                rowModesModel={rowModesModel}
+                onRowModesModelChange={(m) => {
+                    setRowModesModel(m);
                 }}
                 columnVisibilityModel={columnVisibilityModel}
                 onColumnVisibilityModelChange={(newModel) =>
                     setColumnVisibilityModel(newModel)
                 }
-                //autoPageSize={true}
-                autoHeight={true}
-                onCellClick={(params, event)=> { 
-                    if(params.field !== 'action') {
-                        setAddState(false);
-                        setShowEditDialog({open:true, id:params.row.id}); 
-                    }
-                 }}
+                getRowClassName={(params)=> params.row.is_deleted? "row-deleted" : ""}
+                rowSelection={false}
+                onProcessRowUpdateError={(error)=> enqueueSnackbar(error, {variant:'error'})}
+                localeText={locale.muiDataGridLocale}
+                rows={dataSource}
+                columns={[
+                    { field: 'id', headerName: 'ID', width: 70},
+                    { field: 'last_name', headerName: locale.lastNameLocale, editable: true, width:120, },
+                    { field: 'first_name', headerName: locale.firstNameLocale, editable: true, width:120, },
+                    { field: 'patronymic', headerName: locale.patronymicLocale, editable: true, width:120, },
+                    {
+                        field: 'full_name', headerName: locale.fioLocale,  sortable: false, width:350,
+                        //description: 'Тут может быть ваше описание',
+                        sortable: true,
+                        type: "string",
+                        sortComparator: (a,b) => a.toString().toLowerCase().localeCompare(b.toString().toLowerCase()),
+                        valueGetter: (params) =>
+                            `${params.row.last_name || ''} ${params.row.first_name || ''} ${params.row.patronymic || ''}`,
+                    },
+                    { 
+                        field: 'birth_date',  headerName: locale.yearsOldLocale, type:'date', width:120, editable: true,
+                        valueFormatter: (params)=>{
+                            if(!params.value) return "";
+
+                            var birthDate = new Date(params.value);
+                            var yearsOld = new Date().getFullYear() - birthDate?.getFullYear();
+
+                            if(birthDate.getMonth() < new Date().getMonth()){
+                                yearsOld -= 1;
+                            }
+
+                            return yearsOld;
+                        },
+                    },
+                    { field: 'gender', headerName: locale.genderLocale, type: 'singleSelect', valueOptions: ["Ж", "М"], width:70, editable: true },
+                    { field: 'id_role', headerName: 'Роль',  type:"singleSelect", editable: true, 
+                        getOptionLabel: (val)=> val.name,
+                        getOptionValue: (val)=> val.id_role,
+                        valueOptions: [{id_role: 1, name:'участник'},{id_role: 2, name:'админ'},],//Пока не решил проблему загрузки ролей из базы, потому хардкод
+                        
+                    },
+                    { field: 'id_depart', headerName: locale.departLocale, type:"singleSelect", editable: true,  valueOptions:[12, 44, 55, 66, 15]},
+                    { field: 'is_deleted',  headerName: locale.deletedLocale, type: 'boolean', editable: true },
+                    {
+                        field: 'actions', type:'actions',  headerName: '', sortable: false,minWidth:100, flex: 1,
+                        getActions: (params) => {
+                            const editMode = rowModesModel[params.id]?.mode === GridRowModes.Edit;
+                            const addMode = editMode && rowModesModel[params.id]?.isNew;
+
+                            if(editMode || addMode){
+
+                                return [
+                                    <GridActionsCellItem
+                                        icon={<SaveIcon />}
+                                        label={locale.saveLocale}
+                                        sx={{ color: 'green' }}
+                                        onClick={()=> handleSaveClick(params.id)}
+                                        size="large"
+                                    />,
+                                    <GridActionsCellItem
+                                        icon={<CloseIcon />}
+                                        label={locale.cancelLocale}
+                                        sx={{ color: 'orange' }}
+                                        onClick={()=> handleRowEditStop(params.id, addMode)}
+                                        size="large"
+                                    />,
+                                ];
+
+                            }
+
+                            return [
+                                <GridActionsCellItem
+                                    icon={<EditIcon />}
+                                    label={locale.changeLocale}
+                                    sx={{ color: 'black' }}
+                                    onClick={() => handleRowEditStart(params.id)}
+                                    size="large"
+                                />,
+                                <GridActionsCellItem
+                                    icon={<HistoryIcon />}
+                                    label={locale.hasInTeamsLocale}
+                                    sx={{ color: 'black' }}
+                                    onClick={() => handleRowEditStop(params.id, addMode)}
+                                    size="large"
+                                />
+                            ];
+                        }
+                    },
+                ]}
             />
 
-            <Backdrop open={open} />
-            
-            {/* <SpeedDial
-                ariaLabel="SpeedDial tooltip example"
-                sx={{ position: 'fixed', bottom: 0, right: 16 }}
-                icon={<SpeedDialIcon />}
-                onClose={handleClose}
-                onOpen={handleOpen}
-                open={open}
-            >
-                {actions.map((action) => (
-                    <SpeedDialAction
-                        key={action.name}
-                        icon={action.icon}
-                        tooltipTitle={action.name}
-                        tooltipOpen
-                        onClick={handleOpenAddDialog}
-                    />
-                ))}
-            </SpeedDial> */}
-            
             <IconButton
-            style={{ position: 'fixed', bottom: 16, right: 16, backgroundColor: green[300], width: '60px', height: '60px' }}
-            onClick={handleOpenAddDialog}>
+                style={{ position: 'fixed', bottom: 16, right: 16, backgroundColor: green[300], width: '60px', height: '60px' }}
+                onClick={() => {
+                    var a = dataSource.length;
+                    var b= a? a * -1 : 0;
+                    var newVal = { id: b, first_name: '', last_name: '', patronymic: '', age: '', gender: 'М', id_role: 1, id_depart: 12, is_deleted: false, loading: false, isNew: true };
+
+                    addValueToDS(newVal);
+                    handleRowEditStart(b, true);
+                }}>
                 <AddIcon />
             </IconButton>
         </div>
     );
 }
+
