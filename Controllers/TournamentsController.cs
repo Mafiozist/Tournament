@@ -14,7 +14,7 @@ namespace Tournament.Controllers
 {
     [ApiController]
     [Route("[controller]/api/")]
-    public class TournamentsController : Controller
+    public class TournamentsController : BaseController
     {
 
         /// <summary>
@@ -54,12 +54,8 @@ namespace Tournament.Controllers
         //        name: 'Alex',
         //      },
 
-        private IConfiguration _configuration;
 
-        public TournamentsController(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
+        public TournamentsController(IConfiguration configuration): base(configuration) { }
 
         [HttpPost("GetOrCreateGroupMatches")]
         public string GetOrCreateGroupMatches(string idTourn)
@@ -115,7 +111,7 @@ namespace Tournament.Controllers
         }
 
         [HttpPost("CreateTournament")]
-        public Request CreateTournament([FromBody] TournInfo tourn)
+        public Request CreateTournament(TournInfo tourn)
         {
 
             using (IDbConnection db = new NpgsqlConnection(_configuration.GetConnectionString("competition")))
@@ -186,8 +182,8 @@ namespace Tournament.Controllers
                         if (switcher && tmpReal!=0)//Переключатель для того чтобы не было подряд идущих пустых команд по началу
                         {
                             var item = matches.Find(i => i.Id == match.Id);
-                                item.Participants[0].Id = teamsToManage.Dequeue();
-                                item.Participants[1].Id = teamsToManage.Dequeue();
+                            item.Participants[0].Id = teamsToManage.Dequeue();
+                            item.Participants[1].Id = teamsToManage.Dequeue();
                             --tmpReal;
                             if (tmpDummy > 0) switcher = false; 
                         }
@@ -196,7 +192,7 @@ namespace Tournament.Controllers
                             int Id = teamsToManage.Dequeue();
                             var item = matches.Find(i => i.Id == match.Id);
                             item.Participants[0].Id = Id;
-                            item.Status = 1;//Завершен, потому что матч пустышка
+                            item.State = 1;//Завершен, потому что матч пустышка
                             item.IdWinner = Id;
 
                             var partId = matches.Find(m => m.Id == match.NextMatchId).Participants[0].Id;
@@ -218,7 +214,7 @@ namespace Tournament.Controllers
 
                     foreach (var match in matches)
                     {
-                        db.Execute(updateStmTemplate, new { idTeam1 = match?.Participants[0]?.Id, idTeam2 = match?.Participants[1]?.Id, idNextMatch=match?.NextMatchId,  idTourn=match.IdParent, isTop=match.IsTop,  idMatch=match.Id, idWinner=match.IdWinner, Status=match.Status }, transaction);
+                        db.Execute(updateStmTemplate, new { idTeam1 = match?.Participants[0]?.Id, idTeam2 = match?.Participants[1]?.Id, idNextMatch=match?.NextMatchId,  idTourn=match.IdParent, isTop=match.IsTop,  idMatch=match.Id, idWinner=match.IdWinner, Status=match.State }, transaction);
                     }
 
                     res.Data = null;
@@ -254,7 +250,7 @@ namespace Tournament.Controllers
         }
 
         [HttpPut("UpdateMatches")]
-        public Request UpdateWinnerMatches(List<MatchInfo> matches)
+        public Request UpdateMatches(List<MatchInfo> matches)//TODO if there is no next matches it is 
         {
             Request res = new Request();
 
@@ -271,7 +267,7 @@ namespace Tournament.Controllers
                         db.Execute($"UPDATE tourn_match SET id_winner=@idWinner, result=@Result, status=1 WHERE id_tourn_match=@IdMatch", new { match.IdWinner, match.Result, match.IdMatch }, transaction);
 
                         //Если есть победители в матче
-                        if(match.IdNextMatch != -1 && match.IdWinner > 1)
+                        if(match.IdNextMatch != -1 && match.IdWinner >= 1)
                         {
                             string qry = $@"UPDATE tourn_match SET id_team1 = (CASE WHEN part.id_team1>0 THEN part.id_team1 ELSE {match.IdWinner} END),
                                                                  id_team2 = (CASE WHEN part.id_team2>0 THEN part.id_team2 ELSE {match.IdWinner} END)
@@ -322,22 +318,22 @@ namespace Tournament.Controllers
                     { 
                         Id = Convert.ToInt32(i.id_tourn_match ?? null),
                         NextMatchId = Convert.ToInt32(i.id_next_tourn_match ?? -1),
-                        IdWinner = Convert.ToInt32(i.id_winner ?? -1),
+                        IdWinner = (int?) i.id_winner,
                         IdParent = Convert.ToInt32(i.id_tourn ?? -1),
-                        Status = i.status,
+                        State = i.status,
                         Result = i.result,
-                        State =  i.status==1? "SCORE_DONE" : "",
+                        Status = i.status == 1 ? "SCORE_DONE" : null,//Нужно для библиотеки 
                         IsTop = i.is_top,
                         Participants = new List<Team>() { 
                         new Team() { 
-                            Id = Convert.ToInt32(i.id_team1 ?? -1), 
+                            Id = i.id_team1, 
                             Name=i.first_team_name, 
                             ResultText= String.IsNullOrEmpty(i.result)? "" : Convert.ToString(i.result).Split('/')[0],
                             IsWinner = (i.id_winner == i.id_team1 && i.id_winner != -1),
                             Status = GetMemberStatusOfMatch((int ?) i.id_team1, (int ?) i.id_team2, (int ?) i.status, (int ?) i.id_winner),
                         }, 
                         new Team() {
-                            Id = Convert.ToInt32(i.id_team2 ?? -1), 
+                            Id = i.id_team2, 
                             Name = i.second_team_name,
                             ResultText= String.IsNullOrEmpty(i.result)? "" : Convert.ToString(i.result).Split('/')[1],
                             IsWinner = (i.id_winner == i.id_team2 && i.id_winner != -1),
