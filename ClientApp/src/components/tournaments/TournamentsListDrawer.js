@@ -45,7 +45,7 @@ export default function TournamentsListDrawer(props) {
       sx={{ width: 250 }}
       role="presentation"
     >
-      <TextField variant='outlined' label='Поиск турнира' onChange={handleFilterTour} style={{margin:'10px'}}></TextField>
+      <TextField variant='outlined' label='Поиск турнира' onChange={handleFilterTour} style={{margin:'10px', width:'230px'}}></TextField>
       <List>
         {
             filteredData? 

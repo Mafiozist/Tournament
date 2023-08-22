@@ -10,6 +10,7 @@ import Diversity3SharpIcon from '@mui/icons-material/Diversity3Sharp';
 import EmojiEventsSharpIcon from '@mui/icons-material/EmojiEventsSharp';
 import HomeSharpIcon from '@mui/icons-material/HomeSharp';
 import AppRoutes from '../AppRoutes.js';
+var locale = require('../common/locale.js');
 
 export class NavMenu extends Component {
     static displayName = NavMenu.name;
@@ -23,7 +24,7 @@ export class NavMenu extends Component {
         };
     }
 
-    toggleNavbar() {
+    toggleNavbar= async () => {
         this.setState({
             collapsed: !this.state.collapsed
         });
@@ -33,12 +34,13 @@ export class NavMenu extends Component {
         this.setCurrentTab();
     }
 
-    setCurrentTab(){
+    setCurrentTab = async ()=>{
         const url = window.location.href;
         AppRoutes.forEach(i => {
             
             if(url.includes(i.path)){
                 this.setState({tab: AppRoutes.indexOf(i)});
+                return;
             }
 
         });
@@ -47,14 +49,14 @@ export class NavMenu extends Component {
 
     render() {
         return (
-            <header {...this.props}>
+            <header {...this.props} className="sticky-top sticky-header" >
                
-                <Tabs value={this.state.tab} onChange={(event, val) => this.setState({ tab: val })} className="navbar-expand-sm border-bottom box-shadow mb-2" centered >
-                    <Tab component={Link} to={AppRoutes[0].path} icon={<HomeSharpIcon />} iconPosition='top' label="Главная" />
+                <Tabs value={this.state.tab} onChange={(event, val) => this.setState({ tab: val })} className="navbar-expand-sm border-bottom box-shadow mb-2" centered  >
+                    <Tab component={Link} to={AppRoutes[0].path} icon={<HomeSharpIcon />} iconPosition='top' label={locale.mainPageHeaderLocale}/>
                     <Tab component={Link} to={AppRoutes[1].path} icon={<BugReportSharpIcon />} iconPosition='top' label="Фичи" />
-                    <Tab component={Link} to={AppRoutes[2].path} icon={<PersonPinIcon />} iconPosition='top' label="Участники" />
-                    <Tab component={Link} to={AppRoutes[3].path} icon={<Diversity3SharpIcon />} iconPosition='top' label="Команды" />
-                    <Tab component={Link} to={AppRoutes[4].path} icon={<EmojiEventsSharpIcon />} iconPosition='top' label="Турниры" />
+                    <Tab component={Link} to={AppRoutes[2].path} icon={<PersonPinIcon />} iconPosition='top' label={locale.participantPageHeaderLocale}/>
+                    <Tab component={Link} to={AppRoutes[3].path} icon={<Diversity3SharpIcon />} iconPosition='top' label={locale.teamsPageHeaderLocale} />
+                    <Tab component={Link} to={AppRoutes[4].path} icon={<EmojiEventsSharpIcon />} iconPosition='top' label={locale.tournamentPageHeaderLocale} />
                 </Tabs>
 
             </header>

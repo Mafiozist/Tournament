@@ -1,12 +1,18 @@
+using Tournament;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddControllers(option =>
+{
+    //option.ModelBinderProviders.Insert(0, new SnakeToPascalModelBinderProvider());
+}).AddNewtonsoftJson();
 builder.Services.AddMvc();
 builder.Services.AddSwaggerGenNewtonsoftSupport();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 //builder.Services.AddConnections();
 
 var app = builder.Build();

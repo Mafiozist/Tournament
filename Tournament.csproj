@@ -13,6 +13,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>9999</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>9999</WarningLevel>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="6.0.16" />
@@ -33,6 +41,11 @@
     <None Remove="$(SpaRoot)**" />
     <None Remove="ClientApp\.vscode\**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\DTO\MatchInfo.cs" />
+    <Compile Remove="Models\DTO\TournInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>

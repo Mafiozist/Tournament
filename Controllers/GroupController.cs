@@ -2,11 +2,10 @@
 
 namespace Tournament.Controllers
 {
-    public class GroupController : Controller
+    public class GroupController : BaseController
     {
-        public IActionResult Index()
+        public GroupController(IConfiguration configuration) : base(configuration)
         {
-            return View();
         }
     }
 }

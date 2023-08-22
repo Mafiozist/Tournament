@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SingleEliminationBracket, Match, SVGViewer } from '@g-loot/react-tournament-brackets';
+import { SingleEliminationBracket, Match, SVGViewer, MATCH_STATES } from '@g-loot/react-tournament-brackets';
 import EditMatch from './EditMatch.js'
 import { Stack, Typography } from '@mui/material';
 import { useActions } from '../../redux/hooks/useActions';
@@ -67,8 +67,8 @@ export function Tournaments() {
 
     const handleMouseEnter = (match) => {
         // Получаем название участников матча
-
         console.log('Entered:', match);
+
         // Обновляем состояние выбранного матча
         setSelectedMatch(match.match);
     };
@@ -76,8 +76,6 @@ export function Tournaments() {
     const handleListItemClick = (id, index) => {
         console.log('ClickedItem', {id, index});
         setSelectedIndex(id);
-        
-        console.log('recivedData',data); 
     };
 
     useEffect(()=>{
@@ -95,29 +93,37 @@ export function Tournaments() {
             <Stack direction="column">  
 
                 {
-                    currentMatches && currentMatches?.length !==0?
-                        <div>
-                            <SingleEliminationBracket
-                                matches={currentMatches}
-                                matchComponent={Match}
-                                onMatchClick={handleMatchClick}
-                                onPartyClick={handleMouseEnter}
-                                svgWrapper={({ children, ...props }) => (
-                                    <SVGViewer width={windowSize.width} height={windowSize.height - 150}  {...props}>
-                                      {children}
-                                    </SVGViewer>
-                                )}
-                            />
+                    currentMatches && currentMatches?.length !== 0 ?
+                        <span>
+                            
+                                <SingleEliminationBracket
+                                    matches={currentMatches}
+                                    matchComponent={Match}
+                                    onMatchClick={handleMatchClick}
+                                    onPartyClick={handleMouseEnter}
+                                     svgWrapper={
+                                        ( {children, ...props }) =>
+                                        { 
+                                            {console.log(children, props)}
+                                            return (<SVGViewer 
+                                                width={1200} 
+                                                height={900}
 
-                                <EditMatch 
-                                    match={selectedMatch?.match} 
-                                    visible={popoverOpen} 
-                                    popoverParent={popoverEl}
-                                    close={() => setPopoverOpen(false)}
-                                    open={() => setPopoverOpen(true)} />
-                        </div>
-                    :
-                       <Typography style={{ position: 'fixed', top: 95, left: 65, }}>
+                                                {...props}>
+                                                    {children}
+                                            </SVGViewer>)
+                                        }
+                                    }
+                                />
+                            <EditMatch
+                                match={selectedMatch?.match}
+                                visible={popoverOpen}
+                                popoverParent={popoverEl}
+                                close={() => setPopoverOpen(false)}
+                                open={() => setPopoverOpen(true)} />
+                        </span>
+                        :
+                        <Typography style={{ position: 'fixed', top: 95, left: 65, }}>
                             <KeyboardBackspaceIcon className='pulse' /> Выберите турнир
                        </Typography>
 

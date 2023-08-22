@@ -1,8 +1,6 @@
-import { Counter } from "./components/Counter";
-import { FetchData } from "./components/FetchData";
 import { Home } from "./components/Home";
 import { SingleElimination } from "./components/tests/SingleElimination";
-import { Participants } from "./components/participants/Participants";
+import { Participants } from "./components/participants/Participants.js";
 import { Teams } from "./components/teams/Teams";
 import { Tournaments } from "./components/tournaments/Tournaments.js";
 

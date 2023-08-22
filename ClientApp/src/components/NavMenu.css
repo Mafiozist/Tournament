@@ -4,6 +4,12 @@
   word-break: break-all;
 }
 
+.sticky-header{
+  position: sticky;
+  width: 100%;
+  background-color: rgb(255, 255, 255);
+}
+
 html {
   font-size: 14px;
 }

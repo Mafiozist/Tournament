@@ -1,14 +1,20 @@
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
-import { IconButton, Input, Typography } from '@mui/material';
+import { Card, Grid, IconButton, Input, TextField, Typography } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import CloseIcon from '@mui/icons-material/CloseOutlined';
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined';
 import React, { Component, useState, useRef, useEffect } from 'react';
-import { Label } from 'reactstrap';
+import { CardFooter, Label } from 'reactstrap';
 import Button from '@mui/material/Button';
 import { useActions } from '../../redux/hooks/useActions';
 import { useGetTeamsQuery } from '../../redux/component/api/teams.api';
 import { useUpdateMatchesMutation } from '../../redux/component/api/matches.api';
+import { DataGrid } from '@mui/x-data-grid';
+import { LoadingButton } from '@mui/lab';
+
+var locale = require('../../common/locale.js');
+
 
 export function EditMatch(props) {
     const [winner, setWinner] = useState(false);
@@ -24,15 +30,21 @@ export function EditMatch(props) {
     const disabled = props.match?.status === 1? true : false; 
 
     const limited_inputs_style = {
-        float: 'right',
-        width: '60px',
-        maxHeight: '40px',
-        marginLeft: '6px',
+       // float: 'right',
+        width: '80px',
+        //marginLeft: '6px',
     }
     
+    const limited_btns_style = {
+        // float: 'right',
+         width: '40px',
+         height: '40px',
+         //marginLeft: '6px',
+     }
+
     const label_style ={
-        width: '70px',
-        wordBreak: 'break-all'
+        maxWidth: '130px',
+        //wordBreak: 'break-all'
     }
 
     useEffect(()=>{
@@ -56,8 +68,8 @@ export function EditMatch(props) {
     const handleSave = () => {
 
         updateMatches([{
-            IdMatch:props.match.id,
-            IdTour:props.match.idParent,
+            id:props.match.id,
+            id_parent:props.match.idParent,
             IdNextMatch:props.match.nextMatchId,
             IdWinner: winner? props.match.participants[0].id : winner2? props.match.participants[1].id : -1,
             Result: `${res.res1}/${res.res2}`}
@@ -69,7 +81,7 @@ export function EditMatch(props) {
     return (
         
             <Popover
-
+                style={{position:'fixed'}}
                 open={props.visible}
                 onClose={props.close}
                 anchorReference='anchorPosition'
@@ -80,20 +92,23 @@ export function EditMatch(props) {
                 }}
             >
 
-                { (props.match && props.match.participants && props.match.participants.length > 1)?
+            { (props.match && props.match.participants && props.match.participants.some(i=> i.id >= 1)) ?
 
-                    <div style={{ padding: '10px' }}>
+                <Card>
+                    <Stack spacing={4} direction="row" sx={{ padding: '10px' }}>
+                        <Stack className="d-flex justify-content-evenly text-truncate">
+                            <Label style={label_style}>{props.match?.participants[0].name}</Label>
+                            <Label style={label_style}>{props.match?.participants[1].name}</Label>
+                        </Stack>
 
-                        <Stack direction="row" className='mb-2' spacing={{ md: 1 }} >
+                        <Stack>
+                            <TextField variant="standard" style={limited_inputs_style} type="number" />
+                            <TextField variant="standard" style={limited_inputs_style} type="number" />
+                        </Stack>
 
-                            <Label size='100' style={label_style}>
-                                <Typography display="inline" style={{ paddingRight: '7px' }}>
-                                    {props.match.participants[0].name}
-                                </Typography>
-                            </Label>
+                        <Stack className='limited-inputs d-flex justify-content-evenly'>
 
-                            <Input  style={limited_inputs_style} variant="filled" hidden={disabled} disabled={disabled} placeholder='Исход' required={true} onChange={e=> setRes({...res, res1:e.target.value})}>{res?.res1}</Input>
-                            <IconButton aria-label='check' style={limited_inputs_style} disabled={disabled} onClick={(e) => { setWinner(!winner); setWinner2(false); }}>
+                            <IconButton aria-label='check' disabled={disabled} style={limited_btns_style} onClick={(e) => { setWinner(!winner); setWinner2(false); }}>
                                 {
                                     winner ?
                                         <EmojiEventsIcon />
@@ -102,16 +117,7 @@ export function EditMatch(props) {
                                 }
                             </IconButton>
 
-                        </Stack>
-
-                        <Stack direction="row" spacing={{ md: 1 }} style={{ maxWidth: '200px' }}>
-                            <Label size='100' style={label_style}>
-                                <Typography display="inline" style={{paddingRight: '7px' }}>
-                                    {props.match.participants[1].name}
-                                </Typography>
-                            </Label>
-                            <Input className='limited-inputs' style={limited_inputs_style} hidden={disabled} disabled={disabled} variant="filled" placeholder='Исход' required={true} onChange={e=> setRes({...res, res2: e.target.value})}>{res?.res2}</Input>
-                            <IconButton aria-label='check' className='limited-inputs' disabled={disabled} style={limited_inputs_style} onClick={(e) => { setWinner2(!winner2); setWinner(false); }}>
+                            <IconButton aria-label='check' disabled={disabled} style={limited_btns_style} onClick={(e) => { setWinner2(!winner2); setWinner(false); }}>
                                 {
                                     winner2 ?
                                         <EmojiEventsIcon />
@@ -121,24 +127,27 @@ export function EditMatch(props) {
                             </IconButton>
                         </Stack>
 
-                        {
-                            (props.match.status !== 1 || !props.match.status)?
+                    </Stack>
 
-                                <Button style={{ float: 'right', margin: '5px' }} variant="outlined" onClick={handleSave} > Save</Button> /*НУЖНА ЗАГРУЗКА*/
-                                :
-                                <></>
-                        }
+                    <CardFooter className="d-flex justify-content-around mx-1 mb-1">
+                        <LoadingButton >
+                                {locale.saveLocale}
+                        </LoadingButton>
 
-                    </div>
+                        <Button>
+                                {locale.cancelLocale}
+                        </Button>
+                    </CardFooter>
+                </Card>
 
-                    :
+                :
 
-                    <Typography style={{margin: '10px'}}>
-                        Матч еще не был сформирован
+                <Typography style={{ margin: '10px' }}>
+                    Матч еще не был сформирован
                     </Typography>
-                }
-            </Popover>
-      
+            }
+        </Popover>
+
 
     )
 

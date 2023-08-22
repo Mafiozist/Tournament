@@ -9,7 +9,7 @@ const context = [
   "/Teams/api/",
   "/Groups/api/",
   "/Tournaments/api/",
-  "/history",
+  "/History/api/",
   "/Participants/api/",
   "/test",
 ];

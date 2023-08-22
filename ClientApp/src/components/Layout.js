@@ -22,9 +22,9 @@ export class Layout extends Component {
 
   render() {
     return (
-      <div>
+      <div style={{width:'100%', height:'100%'}}>
         <NavMenu ref={this.ref} />
-        <Container >
+        <Container style={{width:'100%', height:'100%'}}>
           {this.props.children}
         </Container>
       </div>

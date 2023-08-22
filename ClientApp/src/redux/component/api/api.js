@@ -5,7 +5,7 @@ import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 //Тут необходимо конфигурировать + не забывать про ревалидацию тегов
 export const api = createApi({
     reducerPath: 'api',
-    tagTypes: ['participants', 'tournaments', 'matches', 'group-matches', 'teams'],
+    tagTypes: ['participants', 'tournaments', 'matches', 'group-matches', 'teams', 'teams/members'],
     baseQuery: fetchBaseQuery({
         baseUrl: process.env.BASE_URL
     }),
