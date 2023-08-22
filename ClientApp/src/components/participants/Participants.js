@@ -127,6 +127,7 @@ export function Participants(props) {
                     setColumnVisibilityModel(newModel)
                 }
                 getRowClassName={(params)=> params.row.is_deleted? "row-deleted" : ""}
+                autoHeight
                 rowSelection={false}
                 onProcessRowUpdateError={(error)=> enqueueSnackbar(error, {variant:'error'})}
                 localeText={locale.muiDataGridLocale}

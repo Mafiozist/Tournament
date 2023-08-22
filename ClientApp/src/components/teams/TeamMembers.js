@@ -50,6 +50,7 @@ export function TeamMembers(props) {
                     disableColumnMenu
                     rowSelection={true}
                     rows={props.data}
+                    autoHeight
                     initialState={{
                         pagination: { paginationModel: { pageSize: 10 } },
 

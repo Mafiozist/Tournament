@@ -57,6 +57,7 @@ export function TeamMembersHist(props){
                     initialState={{
                         pagination: { paginationModel: { pageSize: 10 } },
                     }}
+                    autoHeight
                     pageSizeOptions={[10]}
                     disableRowSelectionOnClick
                     getRowClassName={(params)=> params.row.type === 'del' ? "row-deleted" : "row-added"}
