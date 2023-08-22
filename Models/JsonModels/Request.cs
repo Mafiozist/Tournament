@@ -1,16 +1,24 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Tournament.Models.JsonModels
 {
     public class Request
     {
-        [JsonPropertyName("data")]
-        public string Data { get; set; } = string.Empty;
+        public Request()
+        {
+            Data = null;
+            Status = -1;
+            Msg = "Сообщение по-умолчанию. Отсутствуют данные.";
+        }
+
+        [JsonProperty(PropertyName ="data")]
+        public Object Data { get; set; }
         
-        [JsonPropertyName("status")]
+        [JsonProperty(PropertyName = "status")]
         public int Status { get; set; }
 
-        [JsonPropertyName("msg")]
+        [JsonProperty(PropertyName = "msg")]
         public string Msg { get; set; } = string.Empty;
     }
 }

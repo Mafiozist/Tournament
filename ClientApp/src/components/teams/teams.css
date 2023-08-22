@@ -1,0 +1,15 @@
+.row-cursor{
+    cursor: pointer;
+}
+
+div[role="tooltip"]{
+    top: -120px !important;
+}
+
+.row-deleted{
+    background-color: rgb(184, 133, 133);
+}
+
+.row-added{
+    background-color:rgb(146, 175, 146);
+}
